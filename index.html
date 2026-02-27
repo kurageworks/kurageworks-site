@@ -1,13 +1,151 @@
-<!DOCTYPE html>
-<html lang="ja">
+<!DOCTYPE html><html lang="ja">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KurageWorks</title>
-</head>
-<body>
-  <h1>KurageWorks</h1>
-  <p>Coming soon🫧</p>
-</body>
+  <meta name="description" content="KurageWorks — Coming soon." />
+  <meta name="theme-color" content="#0b1220" />  <style>
+    :root{
+      --bg1:#070b14;
+      --bg2:#0b1b2d;
+      --text:#e9f2ff;
+      --muted:rgba(233,242,255,.72);
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.14);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+      background:
+        radial-gradient(800px 500px at 15% 20%, rgba(120,210,255,.18), transparent 60%),
+        radial-gradient(700px 500px at 80% 30%, rgba(170,140,255,.16), transparent 60%),
+        radial-gradient(900px 700px at 50% 90%, rgba(60,255,210,.10), transparent 60%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+
+    .wrap{
+      min-height:100%;
+      display:grid;
+      place-items:center;
+      padding:28px 18px;
+    }
+
+    .card{
+      width:min(720px, 100%);
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, var(--card), rgba(255,255,255,.03));
+      border-radius:22px;
+      padding:28px 22px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.38);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      position:relative;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:10px;
+    }
+
+    .logo{
+      width:42px;height:42px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.18);
+      background:
+        radial-gradient(16px 16px at 30% 35%, rgba(255,255,255,.36), transparent 60%),
+        radial-gradient(18px 18px at 70% 70%, rgba(255,255,255,.22), transparent 60%),
+        linear-gradient(145deg, rgba(120,210,255,.22), rgba(170,140,255,.18));
+    }
+
+    h1{
+      font-size: clamp(28px, 4.2vw, 40px);
+      letter-spacing: .02em;
+      margin:0;
+      line-height:1.1;
+    }
+
+    .sub{
+      margin: 10px 0 18px;
+      color:var(--muted);
+      font-size: 15px;
+      line-height:1.7;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.05);
+      color: rgba(233,242,255,.86);
+      font-size: 13px;
+      user-select:none;
+    }
+
+    .bubbles{
+      position:absolute;
+      inset:-40px -40px auto auto;
+      width:220px;height:220px;
+      pointer-events:none;
+      filter: blur(.2px);
+      opacity:.9;
+    }
+    .bubbles span{
+      position:absolute;
+      width:14px;height:14px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.22);
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(255,255,255,.05));
+      animation: float 6s ease-in-out infinite;
+    }
+    .bubbles span:nth-child(1){ left:20px; top:120px; animation-duration: 7.5s; transform: scale(1.4); }
+    .bubbles span:nth-child(2){ left:90px; top:70px;  animation-duration: 6.2s; transform: scale(1.1); }
+    .bubbles span:nth-child(3){ left:150px; top:120px; animation-duration: 8.2s; transform: scale(1.8); }
+    .bubbles span:nth-child(4){ left:170px; top:40px;  animation-duration: 5.8s; transform: scale(1.0); }
+
+    @keyframes float{
+      0%,100%{ transform: translateY(0) scale(var(--s,1)); }
+      50%{ transform: translateY(-12px) scale(var(--s,1)); }
+    }
+
+    footer{
+      margin-top:16px;
+      color: rgba(233,242,255,.45);
+      font-size: 12px;
+    }
+
+    a{ color: inherit; }
+  </style></head><body>
+  <main class="wrap">
+    <section class="card" aria-label="KurageWorks coming soon">
+      <div class="bubbles" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </div><div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <h1>KurageWorks</h1>
+  </div>
+
+  <p class="sub">
+    ただいま準備中。<br />
+    作品・開発ログ・配布物などを、ゆっくり置いていく場所になります。
+  </p>
+
+  <div class="pill">Coming soon 🫧</div>
+
+  <footer>© <span id="y"></span> KurageWorks</footer>
+</section>
+
+  </main>  <script>
+    document.getElementById("y").textContent = new Date().getFullYear();
+  </script></body>
 </html>
-<!-- refresh -->
