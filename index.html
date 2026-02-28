@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
@@ -6,119 +7,133 @@
   <title>KurageWorks Aquarium Base (A)</title>
   <style>
     html, body { margin:0; height:100%; background:#0b1420; overflow:hidden; }
-    #app { position:fixed; inset:0; }
+    #app { position:fixed; inset:0; }/* Live cam overlay */
+.hud {
+  position:fixed; inset:0; pointer-events:none;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  color: rgba(255,255,255,0.92);
+}
+.hud .topbar {
+  position:absolute;
+  left:calc(16px + env(safe-area-inset-left));
+  top:calc(14px + env(safe-area-inset-top));
+  display:flex; gap:10px; align-items:center;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 999px;
+  padding: 8px 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+.pill {
+  display:inline-flex; align-items:center; gap:8px;
+  font-size: 12px; letter-spacing: 0.06em;
+  opacity: 0.95;
+}
+.dot {
+  width:8px; height:8px; border-radius:50%;
+  background: #ff3b6a;
+  box-shadow: 0 0 14px rgba(255,59,106,0.8);
+}
+.hud .corner {
+  position:absolute;
+  right:calc(16px + env(safe-area-inset-right));
+  bottom:calc(16px + env(safe-area-inset-bottom));
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 10px 12px;
+  max-width: 360px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.hud .corner .title { font-size: 12px; opacity: 0.9; margin-bottom: 6px; }
+.hud .corner .desc { font-size: 12px; line-height: 1.45; opacity: 0.75; }
 
-    /* Live cam overlay */
-    .hud {
-      position:fixed; inset:0; pointer-events:none;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
-      color: rgba(255,255,255,0.92);
-    }
-    .hud .topbar {
-      position:absolute; left:16px; top:14px;
-      display:flex; gap:10px; align-items:center;
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 999px;
-      padding: 8px 12px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
-    .pill {
-      display:inline-flex; align-items:center; gap:8px;
-      font-size: 12px; letter-spacing: 0.06em;
-      opacity: 0.95;
-    }
-    .dot {
-      width:8px; height:8px; border-radius:50%;
-      background: #ff3b6a;
-      box-shadow: 0 0 14px rgba(255,59,106,0.8);
-    }
-    .hud .corner {
-      position:absolute; right:16px; bottom:16px;
-      background: rgba(0,0,0,0.18);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      padding: 10px 12px;
-      max-width: 360px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    .hud .corner .title { font-size: 12px; opacity: 0.9; margin-bottom: 6px; }
-    .hud .corner .desc { font-size: 12px; line-height: 1.45; opacity: 0.75; }
+/* Optional: subtle vignette */
+.vignette {
+  position:fixed; inset:0; pointer-events:none;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.0) 35%, rgba(0,0,0,0.35) 100%);
+  mix-blend-mode: multiply;
+}
 
-    /* Optional: subtle vignette */
-    .vignette {
-      position:fixed; inset:0; pointer-events:none;
-      background: radial-gradient(ellipse at center, rgba(0,0,0,0.0) 35%, rgba(0,0,0,0.35) 100%);
-      mix-blend-mode: multiply;
-    }
+/* Clickable controls (pointer-events on) */
+.controls {
+  position:fixed;
+  left:calc(16px + env(safe-area-inset-left));
+  right:calc(16px + env(safe-area-inset-right));
+  bottom:calc(16px + env(safe-area-inset-bottom));
+  pointer-events:auto;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  max-width: calc(100vw - 32px);
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 999px;
+  padding: 10px 12px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btn {
+  appearance:none; border:none; cursor:pointer;
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.92);
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  transition: transform 120ms ease, background 120ms ease;
+}
+.btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-1px); }
+.btn:active { transform: translateY(0px) scale(0.99); }
 
-    /* Clickable controls (pointer-events on) */
-    .controls {
-      position:fixed; left:16px; bottom:16px; pointer-events:auto;
-      display:flex; gap:10px; align-items:center;
-      background: rgba(0,0,0,0.18);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 999px;
-      padding: 10px 12px;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    .btn {
-      appearance:none; border:none; cursor:pointer;
-      background: rgba(255,255,255,0.10);
-      color: rgba(255,255,255,0.92);
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      transition: transform 120ms ease, background 120ms ease;
-    }
-    .btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-1px); }
-    .btn:active { transform: translateY(0px) scale(0.99); }
+.hint {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-left: 4px;
+  user-select:none;
+  flex-basis: 100%;
+  text-align: center;
+  margin-top: 2px;
+  margin-left: 0;
+}
 
-    .hint {
-      font-size: 12px;
-      opacity: 0.7;
-      margin-left: 4px;
-      user-select:none;
-    }
+@media (max-width: 520px) {
+  .hud .corner { display:none; }
+  .controls { padding: 10px 10px; gap: 8px; }
+  .btn { padding: 8px 10px; }
+}
+@media (max-width: 380px) {
+  .hint { display:none; }
+}
+
   </style>
 </head>
 <body>
-  <div id="app"></div>
-
-  <div class="hud">
+  <div id="app"></div>  <div class="hud">
     <div class="topbar">
       <div class="pill"><span class="dot"></span><span>LIVE</span></div>
       <div class="pill" id="clock">--:--:--</div>
-    </div>
+    </div><div class="corner">
+  <div class="title">KurageWorks Aquarium Cam</div>
+  <div class="desc">静かな水槽ベース（Style A）。このままでも“眺められる”状態。あとでglbのキャラ/小物を差し替えできます。</div>
+</div>
 
-    <div class="corner">
-      <div class="title">KurageWorks Aquarium Cam</div>
-      <div class="desc">静かな水槽ベース（Style A）。このままでも“眺められる”状態。あとでglbのキャラ/小物を差し替えできます。</div>
-    </div>
-  </div>
-
-  <div class="controls">
+  </div>  <div class="controls">
     <button class="btn" id="btnToggle">Pause</button>
     <button class="btn" id="btnQuality">Quality: High</button>
     <span class="hint">ドラッグで少しだけ視点移動</span>
-  </div>
-
-  <div class="vignette"></div>
-
-  <script type="importmap">
+  </div>  <div class="vignette"></div>  <script type="importmap">
     {
       "imports": {
         "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
         "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
       }
     }
-  </script>
-
-  <script type="module">
+  </script>  <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -187,7 +202,7 @@
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.minDistance = 3.2;
+    controls.minDistance = 3.9; // keep camera outside the tank walls on mobile too
     controls.maxDistance = 8.0;
     controls.maxPolarAngle = Math.PI * 0.62;
     controls.minPolarAngle = Math.PI * 0.24;
@@ -221,6 +236,8 @@
       specularIntensity: 0.6,
       clearcoat: 0.4,
       clearcoatRoughness: 0.1,
+      side: THREE.DoubleSide,
+      depthWrite: false // IMPORTANT: don't occlude particles/jellyfish behind glass
     });
 
     // Build tank walls as thin boxes (easier to keep inside empty)
@@ -228,6 +245,7 @@
       const g = new THREE.BoxGeometry(sx, sy, sz);
       const m = new THREE.Mesh(g, glassMat);
       m.position.set(x, y, z);
+      m.renderOrder = 10; // draw glass late
       return m;
     }
 
@@ -243,6 +261,7 @@
     frontMat.roughness = 0.03;
     const front = new THREE.Mesh(new THREE.BoxGeometry(tankW, tankH, wallThickness), frontMat);
     front.position.set(0, 0, tankD/2);
+    front.renderOrder = 10; // draw glass late
     tank.add(front);
     // Bottom glass lip
     tank.add(wall(0, -tankH/2, 0, tankW, wallThickness, tankD));
@@ -423,6 +442,7 @@
     });
     const dust = new THREE.Points(dustGeo, dustMat);
     dust.position.set(0, 0.0, 0);
+    dust.renderOrder = 5;
     scene.add(dust);
 
     // Bubble particles (rise)
@@ -455,6 +475,7 @@
     });
     const bubbles = new THREE.Points(bubbleGeo, bubbleMat);
     bubbles.position.set(0, 0.0, 0);
+    bubbles.renderOrder = 5;
     scene.add(bubbles);
 
     // A tiny jellyfish placeholder (super simple)
@@ -569,17 +590,4 @@
 
     // Resize
     function onResize(){
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener('resize', onResize);
-
-    // --- TODO / Next steps ---
-    // 1) キャラ(glb)を読み込む: GLTFLoader で tank 内に追加
-    // 2) ベイク影/ライト調整（Webは重いので基本ベイク推奨）
-    // 3) 文字/ロゴをHUDに追加（KurageWorksロゴ）
-    // 4) クリックでリアクション（泡増える/星が光る等）
-  </script>
-</body>
-</html>
+      camera.aspect = window.inner
