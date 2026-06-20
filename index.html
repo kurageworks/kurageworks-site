@@ -1,593 +1,422 @@
 <!doctype html>
-
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>KurageWorks Aquarium Base (A)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1720" />
+  <title>KurageWorks Motion Card</title>
   <style>
-    html, body { margin:0; height:100%; background:#0b1420; overflow:hidden; }
-    #app { position:fixed; inset:0; }/* Live cam overlay */
-.hud {
-  position:fixed; inset:0; pointer-events:none;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
-  color: rgba(255,255,255,0.92);
-}
-.hud .topbar {
-  position:absolute;
-  left:calc(16px + env(safe-area-inset-left));
-  top:calc(14px + env(safe-area-inset-top));
-  display:flex; gap:10px; align-items:center;
-  background: rgba(0,0,0,0.22);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 999px;
-  padding: 8px 12px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-.pill {
-  display:inline-flex; align-items:center; gap:8px;
-  font-size: 12px; letter-spacing: 0.06em;
-  opacity: 0.95;
-}
-.dot {
-  width:8px; height:8px; border-radius:50%;
-  background: #ff3b6a;
-  box-shadow: 0 0 14px rgba(255,59,106,0.8);
-}
-.hud .corner {
-  position:absolute;
-  right:calc(16px + env(safe-area-inset-right));
-  bottom:calc(16px + env(safe-area-inset-bottom));
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 16px;
-  padding: 10px 12px;
-  max-width: 360px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.hud .corner .title { font-size: 12px; opacity: 0.9; margin-bottom: 6px; }
-.hud .corner .desc { font-size: 12px; line-height: 1.45; opacity: 0.75; }
+    :root {
+      --ink: #f7fbff;
+      --muted: rgba(247,251,255,.68);
+      --glass: rgba(255,255,255,.12);
+      --line: rgba(255,255,255,.18);
+      --accent: #d9e8f5;
+      --rose: #dbc3be;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      touch-action: none;
+      color: var(--ink);
+      font-family: ui-rounded, "Hiragino Maru Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 28% 12%, rgba(217,232,245,.34), transparent 30%),
+        radial-gradient(circle at 80% 18%, rgba(219,195,190,.28), transparent 34%),
+        linear-gradient(180deg, #0c1b26 0%, #12364a 45%, #071018 100%);
+    }
+    #app { position: fixed; inset: 0; }
+    #app canvas { display: block; width: 100%; height: 100%; cursor: grab; }
+    #app canvas:active { cursor: grabbing; }
 
-/* Optional: subtle vignette */
-.vignette {
-  position:fixed; inset:0; pointer-events:none;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.0) 35%, rgba(0,0,0,0.35) 100%);
-  mix-blend-mode: multiply;
-}
+    .hud { position: fixed; inset: 0; pointer-events: none; padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom)); }
+    .panel, .chip, .link, .btn {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.07));
+      box-shadow: 0 18px 60px rgba(0,0,0,.22);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .topbar { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
+    .chip { display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 8px 11px; border-radius: 999px; font-size: 12px; color: rgba(247,251,255,.9); }
+    .rec { width: 8px; height: 8px; border-radius: 50%; background: #ff5277; box-shadow: 0 0 14px rgba(255,82,119,.9); }
+    .spacer { flex: 1; }
+    .btn { appearance: none; border-radius: 999px; color: var(--ink); font: inherit; font-size: 12px; padding: 9px 12px; pointer-events: auto; }
+    .btn:active { transform: scale(.985); }
 
-/* Clickable controls (pointer-events on) */
-.controls {
-  position:fixed;
-  left:calc(16px + env(safe-area-inset-left));
-  right:calc(16px + env(safe-area-inset-right));
-  bottom:calc(16px + env(safe-area-inset-bottom));
-  pointer-events:auto;
-  display:flex;
-  gap:10px;
-  align-items:center;
-  justify-content:center;
-  flex-wrap:wrap;
-  max-width: calc(100vw - 32px);
-  background: rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 999px;
-  padding: 10px 12px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.btn {
-  appearance:none; border:none; cursor:pointer;
-  background: rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.92);
-  padding: 8px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  transition: transform 120ms ease, background 120ms ease;
-}
-.btn:hover { background: rgba(255,255,255,0.14); transform: translateY(-1px); }
-.btn:active { transform: translateY(0px) scale(0.99); }
+    .hero { position: absolute; left: 14px; right: 14px; top: calc(62px + env(safe-area-inset-top)); display: grid; place-items: start center; }
+    .panel { width: min(430px, 100%); border-radius: 26px; padding: 16px 17px 15px; }
+    .kicker { color: var(--muted); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 7px 0 5px; font-size: clamp(34px, 10vw, 54px); line-height: .94; letter-spacing: .02em; }
+    .desc { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
 
-.hint {
-  font-size: 12px;
-  opacity: 0.7;
-  margin-left: 4px;
-  user-select:none;
-  flex-basis: 100%;
-  text-align: center;
-  margin-top: 2px;
-  margin-left: 0;
-}
+    .bottom { position: absolute; left: 14px; right: 14px; bottom: calc(14px + env(safe-area-inset-bottom)); display: grid; gap: 9px; place-items: center; pointer-events: none; }
+    .links { width: min(430px, 100%); display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; pointer-events: auto; }
+    .link { border-radius: 18px; padding: 12px 8px; text-align: center; color: var(--ink); text-decoration: none; font-size: 12px; }
+    .status { width: min(430px, 100%); min-height: 44px; border-radius: 18px; padding: 10px 12px; text-align: center; color: rgba(247,251,255,.78); font-size: 11px; line-height: 1.55; pointer-events: auto; }
+    .meter { width: min(430px, 100%); height: 5px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.15); }
+    .meter i { display: block; width: 26%; height: 100%; border-radius: inherit; background: rgba(217,232,245,.72); transform: translateX(var(--meter-x, 142%)); transition: transform 80ms linear; }
 
-@media (max-width: 520px) {
-  .hud .corner { display:none; }
-  .controls { padding: 10px 10px; gap: 8px; }
-  .btn { padding: 8px 10px; }
-}
-@media (max-width: 380px) {
-  .hint { display:none; }
-}
-
+    @media (max-width: 520px) {
+      .hero { top: calc(58px + env(safe-area-inset-top)); }
+      .panel { padding: 15px 16px 14px; }
+      .chip.optional { display: none; }
+    }
   </style>
 </head>
 <body>
-  <div id="app"></div>  <div class="hud">
-    <div class="topbar">
-      <div class="pill"><span class="dot"></span><span>LIVE</span></div>
-      <div class="pill" id="clock">--:--:--</div>
-    </div><div class="corner">
-  <div class="title">KurageWorks Aquarium Cam</div>
-  <div class="desc">静かな水槽ベース（Style A）。このままでも“眺められる”状態。あとでglbのキャラ/小物を差し替えできます。</div>
-</div>
+  <div id="app" aria-label="KurageWorks motion controlled 3D card"></div>
 
-  </div>  <div class="controls">
-    <button class="btn" id="btnToggle">Pause</button>
-    <button class="btn" id="btnQuality">Quality: High</button>
-    <span class="hint">ドラッグで少しだけ視点移動</span>
-  </div>  <div class="vignette"></div>  <script type="importmap">
+  <main class="hud">
+    <div class="topbar">
+      <div class="chip"><span class="rec"></span><span>LIVE</span></div>
+      <div class="chip optional" id="clock">--:--:--</div>
+      <div class="spacer"></div>
+      <button class="btn" id="motionBtn">motion on</button>
+      <button class="btn" id="calibrateBtn">calibrate</button>
+    </div>
+
+    <section class="hero">
+      <div class="panel">
+        <div class="kicker">tiny world in your phone</div>
+        <h1>KurageWorks</h1>
+        <p class="desc">スマホを傾けると、水槽の中の小さな3Dフィギュアを覗き込むようにカメラが動く名刺サイト。</p>
+      </div>
+    </section>
+
+    <section class="bottom">
+      <nav class="links" aria-label="links">
+        <a class="link" href="#works">Works</a>
+        <a class="link" href="#x">X</a>
+        <a class="link" href="#booth">Booth</a>
+        <a class="link" href="#contact">Contact</a>
+      </nav>
+      <div class="meter"><i id="meter"></i></div>
+      <div class="panel status" id="status">PCはマウス移動、スマホは motion on を押してから端末を傾けてね。</div>
+    </section>
+  </main>
+
+  <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        "three": "https://cdn.jsdelivr.net/npm/three@0.166.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.166.1/examples/jsm/"
       }
     }
-  </script>  <script type="module">
+  </script>
+
+  <script type="module">
     import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-    // -----------------------------
-    // Aquarium Base (Style A)
-    // - Calm, transparent, clean
-    // - Minimal post FX, light fog, caustics-ish light on the floor
-    // - Bubble + micro particle systems
-    // -----------------------------
+    const app = document.getElementById('app');
+    const statusEl = document.getElementById('status');
+    const motionBtn = document.getElementById('motionBtn');
+    const calibrateBtn = document.getElementById('calibrateBtn');
+    const clockEl = document.getElementById('clock');
+    const meterEl = document.getElementById('meter');
 
-    const root = document.getElementById('app');
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const state = {
+      tx: 0, ty: 0, sx: 0, sy: 0,
+      source: 'idle',
+      lastInput: 0,
+      baseGamma: null,
+      baseBeta: null,
+      sensorSeen: false,
+      motionEnabled: false
+    };
+
+    function setStatus(text) { statusEl.textContent = text; }
+    function setInput(x, y, source) {
+      state.tx = clamp(x, -1, 1);
+      state.ty = clamp(y, -1, 1);
+      state.source = source;
+      state.lastInput = performance.now();
+      meterEl.style.setProperty('--meter-x', `${142 + state.tx * 142}%`);
+    }
+    function resetCalibration() {
+      state.baseGamma = null;
+      state.baseBeta = null;
+      setStatus('いまの持ち方を基準にし直したにゃ。ここから少し傾けてみて。');
+    }
+
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
-    root.appendChild(renderer.domElement);
+    app.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(new THREE.Color('#0d4158'), 0.035);
 
-    // Background gradient (shader on big sphere)
-    const bgGeo = new THREE.SphereGeometry(50, 32, 32);
+    const camera = new THREE.PerspectiveCamera(39, window.innerWidth / window.innerHeight, 0.05, 120);
+    const lookAt = new THREE.Vector3(0, 0.35, 0);
+
+    const world = new THREE.Group();
+    scene.add(world);
+
+    scene.add(new THREE.HemisphereLight(new THREE.Color('#dff7ff'), new THREE.Color('#071018'), 1.65));
+    const key = new THREE.DirectionalLight(new THREE.Color('#ffffff'), 2.1);
+    key.position.set(3.2, 5.5, 4.2);
+    scene.add(key);
+    const rim = new THREE.PointLight(new THREE.Color('#d9e8f5'), 2.0, 18);
+    rim.position.set(-3, 1.5, 2.6);
+    scene.add(rim);
+
+    const bgGeo = new THREE.SphereGeometry(40, 32, 24);
     const bgMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
-      uniforms: {
-        uTop: { value: new THREE.Color('#bfefff') },
-        uMid: { value: new THREE.Color('#3aa7d8') },
-        uBot: { value: new THREE.Color('#0b2a3a') },
-        uTime: { value: 0 },
-      },
-      vertexShader: `
-        varying vec3 vPos;
-        void main(){
-          vPos = position;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        varying vec3 vPos;
-        uniform vec3 uTop;
-        uniform vec3 uMid;
-        uniform vec3 uBot;
-        uniform float uTime;
-        float smoothstep01(float x){ return smoothstep(0.0, 1.0, x); }
-        void main(){
-          float h = normalize(vPos).y * 0.5 + 0.5;
-          // gentle shimmering
-          float shimmer = 0.03 * sin(uTime * 0.35 + h * 8.0);
-          vec3 col1 = mix(uBot, uMid, smoothstep01(h * 1.2));
-          vec3 col2 = mix(uMid, uTop, smoothstep01((h - 0.3) * 1.6));
-          vec3 col = mix(col1, col2, smoothstep01(h));
-          col += shimmer;
-          gl_FragColor = vec4(col, 1.0);
-        }
-      `
+      uniforms: { uTime: { value: 0 }, uTop: { value: new THREE.Color('#bfefff') }, uMid: { value: new THREE.Color('#1d779b') }, uBot: { value: new THREE.Color('#071018') } },
+      vertexShader: `varying vec3 vPos; void main(){ vPos=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader: `varying vec3 vPos; uniform float uTime; uniform vec3 uTop; uniform vec3 uMid; uniform vec3 uBot; void main(){ float h=normalize(vPos).y*.5+.5; vec3 col=mix(uBot,uMid,smoothstep(0.0,.72,h)); col=mix(col,uTop,smoothstep(.45,1.0,h)); col += .025*sin(uTime*.32+h*9.0); gl_FragColor=vec4(col,1.0); }`
     });
-    const bg = new THREE.Mesh(bgGeo, bgMat);
-    scene.add(bg);
+    scene.add(new THREE.Mesh(bgGeo, bgMat));
 
-    scene.fog = new THREE.FogExp2(new THREE.Color('#1a6d8b'), 0.035);
+    const glassMat = new THREE.MeshPhysicalMaterial({ color: '#dff7ff', transmission: .62, transparent: true, opacity: .42, roughness: .12, metalness: 0, ior: 1.33, thickness: .45, depthWrite: false });
+    const cardMat = new THREE.MeshPhysicalMaterial({ color: '#ffffff', transmission: .22, transparent: true, opacity: .52, roughness: .25, metalness: 0, depthWrite: false });
+    const lineMat = new THREE.MeshBasicMaterial({ color: '#d9e8f5', transparent: true, opacity: .42 });
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.05, 200);
-    camera.position.set(0.0, 0.8, 6.2);
+    const floor = new THREE.GridHelper(5.2, 18, new THREE.Color('#d9e8f5'), new THREE.Color('#d9e8f5'));
+    floor.material.transparent = true;
+    floor.material.opacity = .18;
+    floor.position.y = -1.25;
+    world.add(floor);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.enablePan = false;
-    controls.minDistance = 3.9; // keep camera outside the tank walls on mobile too
-    controls.maxDistance = 8.0;
-    controls.maxPolarAngle = Math.PI * 0.62;
-    controls.minPolarAngle = Math.PI * 0.24;
-    controls.target.set(0, 0.25, 0);
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.45, .14, 80), glassMat);
+    pedestal.position.y = -1.18;
+    world.add(pedestal);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.34, .012, 8, 120), lineMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = -1.08;
+    world.add(ring);
 
-    // Lights
-    const hemi = new THREE.HemisphereLight(new THREE.Color('#c9f6ff'), new THREE.Color('#0a1a22'), 0.85);
-    scene.add(hemi);
-
-    const dir = new THREE.DirectionalLight(new THREE.Color('#e7fbff'), 1.25);
-    dir.position.set(2.5, 5.5, 2.0);
-    scene.add(dir);
-
-    const fill = new THREE.PointLight(new THREE.Color('#6fd7ff'), 0.7, 20);
-    fill.position.set(-2.4, 1.3, -1.2);
-    scene.add(fill);
-
-    // Aquarium glass box (walls)
-    const tankW = 6.6, tankH = 4.2, tankD = 4.8;
-    const wallThickness = 0.05;
-
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#dff7ff'),
-      transmission: 1.0,
-      transparent: true,
-      opacity: 1.0,
-      roughness: 0.05,
-      metalness: 0.0,
-      ior: 1.33,
-      thickness: 0.6,
-      specularIntensity: 0.6,
-      clearcoat: 0.4,
-      clearcoatRoughness: 0.1,
-      side: THREE.DoubleSide,
-      depthWrite: false // IMPORTANT: don't occlude particles/jellyfish behind glass
-    });
-
-    // Build tank walls as thin boxes (easier to keep inside empty)
-    function wall(x, y, z, sx, sy, sz){
-      const g = new THREE.BoxGeometry(sx, sy, sz);
-      const m = new THREE.Mesh(g, glassMat);
-      m.position.set(x, y, z);
-      m.renderOrder = 10; // draw glass late
-      return m;
-    }
-
-    const tank = new THREE.Group();
-    tank.position.set(0, 0.0, 0);
-    // Left / Right
-    tank.add(wall(-tankW/2, 0, 0, wallThickness, tankH, tankD));
-    tank.add(wall( tankW/2, 0, 0, wallThickness, tankH, tankD));
-    // Back
-    tank.add(wall(0, 0, -tankD/2, tankW, tankH, wallThickness));
-    // Front (slightly more transparent by reducing roughness via clone)
-    const frontMat = glassMat.clone();
-    frontMat.roughness = 0.03;
-    const front = new THREE.Mesh(new THREE.BoxGeometry(tankW, tankH, wallThickness), frontMat);
-    front.position.set(0, 0, tankD/2);
-    front.renderOrder = 10; // draw glass late
-    tank.add(front);
-    // Bottom glass lip
-    tank.add(wall(0, -tankH/2, 0, tankW, wallThickness, tankD));
-    scene.add(tank);
-
-    // Floor (rock base)
-    const floorGeo = new THREE.CylinderGeometry(2.4, 2.9, 0.45, 48, 1);
-    const floorMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#17313f'),
-      roughness: 0.95,
-      metalness: 0.0,
-    });
-    const floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.position.set(0, -tankH/2 + 0.25, 0);
-    tank.add(floor);
-
-    // Some rocks (simple blobs)
-    function makeRock(seed=0){
-      const geo = new THREE.IcosahedronGeometry(0.45 + Math.random()*0.25, 2);
-      const pos = geo.attributes.position;
-      for (let i=0; i<pos.count; i++){
-        const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-        const n = (Math.sin(x*4.0 + seed) + Math.cos(y*5.0 + seed*1.7) + Math.sin(z*3.0 - seed))*0.03;
-        pos.setXYZ(i, x*(1.0+n), y*(1.0+n), z*(1.0+n));
+    function addFloatingCard(x, y, z, ry, rz, scale = 1) {
+      const g = new THREE.Group();
+      const card = new THREE.Mesh(new THREE.BoxGeometry(1.05, .42, .025), cardMat);
+      card.position.z = 0;
+      g.add(card);
+      for (let i = 0; i < 2; i++) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(.65, .035, .012), lineMat);
+        line.position.set(0, .07 - i * .14, .025);
+        g.add(line);
       }
-      geo.computeVertexNormals();
-      const mat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color('#122a36'),
-        roughness: 0.98,
-        metalness: 0.0,
-      });
-      const m = new THREE.Mesh(geo, mat);
-      m.castShadow = false;
-      m.receiveShadow = false;
-      return m;
+      g.position.set(x, y, z);
+      g.rotation.set(.04, ry, rz);
+      g.scale.setScalar(scale);
+      world.add(g);
+      return g;
     }
-    const rockGroup = new THREE.Group();
-    rockGroup.position.set(0, -tankH/2 + 0.70, 0);
-    for (let i=0; i<6; i++){
-      const r = makeRock(i);
-      r.position.set((Math.random()-0.5)*1.9, (Math.random()-0.5)*0.15, (Math.random()-0.5)*1.6);
-      r.scale.setScalar(0.9 + Math.random()*0.8);
-      rockGroup.add(r);
+    const cards = [
+      addFloatingCard(-1.35, .42, -.65, .55, -.08, .72),
+      addFloatingCard(1.36, .75, -.78, -.55, .07, .62),
+      addFloatingCard(-1.12, -.58, -.45, .34, .11, .58),
+      addFloatingCard(1.08, -.36, -.55, -.38, -.08, .64)
+    ];
+
+    function createFallbackResident() {
+      const g = new THREE.Group();
+      const skin = new THREE.MeshStandardMaterial({ color: '#fff0e8', roughness: .72 });
+      const hair = new THREE.MeshStandardMaterial({ color: '#6a4d59', roughness: .58 });
+      const dress = new THREE.MeshStandardMaterial({ color: '#dbc3be', roughness: .66 });
+      const ink = new THREE.MeshStandardMaterial({ color: '#33444f', roughness: .55 });
+      const blue = new THREE.MeshStandardMaterial({ color: '#d9e8f5', roughness: .35, transparent: true, opacity: .88 });
+      const mesh = (geo, mat, pos, scl = [1,1,1], rot = [0,0,0]) => { const m = new THREE.Mesh(geo, mat); m.position.set(...pos); m.scale.set(...scl); m.rotation.set(...rot); g.add(m); return m; };
+      mesh(new THREE.CapsuleGeometry(.33,.72,12,24), dress, [0,-.18,0], [1,1,1]);
+      mesh(new THREE.ConeGeometry(.58,.42,48,1,true), dress, [0,-.72,0], [1,1,1], [Math.PI,0,0]);
+      mesh(new THREE.SphereGeometry(.42,32,24), skin, [0,.72,.02], [1,1.08,.94]);
+      mesh(new THREE.SphereGeometry(.47,32,24), hair, [0,.77,-.09], [1.08,1.08,.78]);
+      mesh(new THREE.ConeGeometry(.16,.58,24), hair, [-.20,.72,.34], [1,1,1], [.12,0,.28]);
+      mesh(new THREE.ConeGeometry(.15,.54,24), hair, [.18,.72,.35], [1,1,1], [.15,0,-.24]);
+      mesh(new THREE.SphereGeometry(.035,16,12), ink, [-.145,.71,.41], [1.9,1.28,.42]);
+      mesh(new THREE.SphereGeometry(.035,16,12), ink, [.145,.71,.41], [1.9,1.28,.42]);
+      mesh(new THREE.CapsuleGeometry(.055,.58,8,12), skin, [-.43,-.18,0], [1,1,1], [0,0,-.35]);
+      mesh(new THREE.CapsuleGeometry(.055,.58,8,12), skin, [.43,-.18,0], [1,1,1], [0,0,.35]);
+      mesh(new THREE.CapsuleGeometry(.06,.72,8,12), skin, [-.16,-1.16,0], [1,1,1]);
+      mesh(new THREE.CapsuleGeometry(.06,.72,8,12), skin, [.16,-1.16,0], [1,1,1]);
+      const halo = mesh(new THREE.TorusGeometry(.76,.012,10,110), blue, [0,.16,-.16], [1,1,1], [Math.PI/2.18,0,0]);
+      g.userData.halo = halo;
+      g.scale.setScalar(1.12);
+      return g;
     }
-    tank.add(rockGroup);
 
-    // Caustics-ish light plane (cheap animated shader)
-    const causticGeo = new THREE.CircleGeometry(2.7, 64);
-    const causticMat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      uniforms: {
-        uTime: { value: 0 },
-        uColor: { value: new THREE.Color('#bff2ff') },
-        uIntensity: { value: 0.65 },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main(){
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        varying vec2 vUv;
-        uniform float uTime;
-        uniform vec3 uColor;
-        uniform float uIntensity;
+    let resident = createFallbackResident();
+    world.add(resident);
 
-        float waves(vec2 p){
-          float a = 0.0;
-          a += sin((p.x + uTime*0.18) * 18.0) * 0.5;
-          a += sin((p.y - uTime*0.15) * 16.0) * 0.5;
-          a += sin((p.x + p.y + uTime*0.12) * 14.0) * 0.5;
-          return a;
-        }
-
-        void main(){
-          vec2 p = (vUv - 0.5) * 2.0;
-          float r = length(p);
-          float m = waves(p);
-          float ca = smoothstep(0.25, 1.0, abs(m));
-          float falloff = smoothstep(1.1, 0.25, r);
-          float alpha = ca * falloff * 0.35 * uIntensity;
-          gl_FragColor = vec4(uColor, alpha);
-        }
-      `
+    const loader = new GLTFLoader();
+    loader.load('assets/kurage.glb', (gltf) => {
+      world.remove(resident);
+      resident = gltf.scene;
+      resident.position.set(0, -1.02, 0);
+      resident.scale.setScalar(1.35);
+      world.add(resident);
+      setStatus('assets/kurage.glb を読み込んだにゃ。motion on で傾き連動できるよ。');
+    }, undefined, () => {
+      // Keep procedural placeholder when the model file is not present yet.
     });
-    const caustic = new THREE.Mesh(causticGeo, causticMat);
-    caustic.rotation.x = -Math.PI/2;
-    caustic.position.set(0, -tankH/2 + 0.52, 0);
-    tank.add(caustic);
 
-    // Water surface (subtle)
-    const surfaceGeo = new THREE.PlaneGeometry(tankW*0.86, tankD*0.86, 1, 1);
-    const surfaceMat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      uniforms: {
-        uTime: { value: 0 },
-        uTint: { value: new THREE.Color('#bfefff') },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main(){
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        varying vec2 vUv;
-        uniform float uTime;
-        uniform vec3 uTint;
-        void main(){
-          float w = sin((vUv.x + uTime*0.06) * 25.0) * 0.04 + sin((vUv.y - uTime*0.05) * 21.0) * 0.04;
-          float rim = smoothstep(0.2, 0.95, abs(vUv.x-0.5)*2.0) + smoothstep(0.2, 0.95, abs(vUv.y-0.5)*2.0);
-          float a = 0.08 + w;
-          a *= (1.0 - rim*0.35);
-          gl_FragColor = vec4(uTint, a);
-        }
-      `
-    });
-    const surface = new THREE.Mesh(surfaceGeo, surfaceMat);
-    surface.rotation.x = -Math.PI/2;
-    surface.position.set(0, tankH/2 - 0.22, 0);
-    tank.add(surface);
-
-    // Particle textures (procedural)
-    function makeCircleTexture({ size=64, soft=true } = {}){
+    const bubbleTex = (() => {
       const c = document.createElement('canvas');
-      c.width = c.height = size;
+      c.width = c.height = 64;
       const ctx = c.getContext('2d');
-      const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-      if (soft){
-        g.addColorStop(0.0, 'rgba(255,255,255,0.85)');
-        g.addColorStop(0.35, 'rgba(255,255,255,0.30)');
-        g.addColorStop(1.0, 'rgba(255,255,255,0.0)');
-      } else {
-        g.addColorStop(0.0, 'rgba(255,255,255,0.9)');
-        g.addColorStop(1.0, 'rgba(255,255,255,0.0)');
-      }
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
-      ctx.fill();
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      return tex;
-    }
-
-    const bubbleTex = makeCircleTexture({ size: 96, soft: true });
-    const dustTex = makeCircleTexture({ size: 64, soft: true });
-
-    // Micro dust particles
-    const dustCount = 800;
-    const dustGeo = new THREE.BufferGeometry();
-    const dustPos = new Float32Array(dustCount * 3);
-    const dustVel = new Float32Array(dustCount);
-    for (let i=0; i<dustCount; i++){
-      const x = (Math.random()-0.5) * (tankW*0.78);
-      const y = (Math.random()-0.5) * (tankH*0.82);
-      const z = (Math.random()-0.5) * (tankD*0.72);
-      dustPos[i*3+0] = x;
-      dustPos[i*3+1] = y;
-      dustPos[i*3+2] = z;
-      dustVel[i] = 0.015 + Math.random()*0.035;
-    }
-    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-    const dustMat = new THREE.PointsMaterial({
-      map: dustTex,
-      transparent: true,
-      depthWrite: false,
-      size: 0.05,
-      opacity: 0.25,
-      color: new THREE.Color('#d7f7ff'),
-      blending: THREE.AdditiveBlending,
-    });
-    const dust = new THREE.Points(dustGeo, dustMat);
-    dust.position.set(0, 0.0, 0);
-    dust.renderOrder = 5;
-    scene.add(dust);
-
-    // Bubble particles (rise)
-    const bubbleCount = 160;
+      const grad = ctx.createRadialGradient(32,32,0,32,32,32);
+      grad.addColorStop(0,'rgba(255,255,255,.9)');
+      grad.addColorStop(.35,'rgba(255,255,255,.25)');
+      grad.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle = grad; ctx.fillRect(0,0,64,64);
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; return tex;
+    })();
+    const bubbleCount = 220;
     const bubbleGeo = new THREE.BufferGeometry();
     const bubblePos = new Float32Array(bubbleCount * 3);
-    const bubbleSeed = new Float32Array(bubbleCount);
     const bubbleSpeed = new Float32Array(bubbleCount);
-
-    function respawnBubble(i, y = -tankH/2){
-      const x = (Math.random()-0.5) * (tankW*0.7);
-      const z = (Math.random()-0.5) * (tankD*0.62);
-      bubblePos[i*3+0] = x;
-      bubblePos[i*3+1] = y;
-      bubblePos[i*3+2] = z;
-      bubbleSeed[i] = Math.random()*Math.PI*2;
-      bubbleSpeed[i] = 0.18 + Math.random()*0.35;
+    for (let i=0;i<bubbleCount;i++) {
+      bubblePos[i*3] = (Math.random()-.5)*5.2;
+      bubblePos[i*3+1] = -1.55 + Math.random()*4.1;
+      bubblePos[i*3+2] = (Math.random()-.5)*3.9;
+      bubbleSpeed[i] = .16 + Math.random()*.38;
     }
-    for (let i=0; i<bubbleCount; i++) respawnBubble(i, -tankH/2 + Math.random()*tankH);
-
     bubbleGeo.setAttribute('position', new THREE.BufferAttribute(bubblePos, 3));
-    const bubbleMat = new THREE.PointsMaterial({
-      map: bubbleTex,
-      transparent: true,
-      depthWrite: false,
-      size: 0.12,
-      opacity: 0.40,
-      color: new THREE.Color('#e9fbff'),
-      blending: THREE.AdditiveBlending,
-    });
-    const bubbles = new THREE.Points(bubbleGeo, bubbleMat);
-    bubbles.position.set(0, 0.0, 0);
-    bubbles.renderOrder = 5;
+    const bubbles = new THREE.Points(bubbleGeo, new THREE.PointsMaterial({ map: bubbleTex, transparent: true, depthWrite: false, size: .085, opacity: .32, color: '#e9fbff', blending: THREE.AdditiveBlending }));
     scene.add(bubbles);
 
-    // A tiny jellyfish placeholder (super simple)
-    const jelly = new THREE.Group();
-    jelly.position.set(1.15, 1.5, -0.6);
-    const bell = new THREE.Mesh(
-      new THREE.SphereGeometry(0.22, 24, 18, 0, Math.PI*2, 0, Math.PI*0.72),
-      new THREE.MeshPhysicalMaterial({
-        color: new THREE.Color('#dff7ff'),
-        transmission: 1,
-        roughness: 0.08,
-        thickness: 0.35,
-        ior: 1.25,
-        transparent: true,
-        opacity: 1,
-      })
-    );
-    bell.scale.set(1.25, 1.0, 1.25);
-    jelly.add(bell);
-
-    const tentMat = new THREE.MeshStandardMaterial({ color: new THREE.Color('#bfefff'), roughness: 0.7, metalness: 0.0, transparent: true, opacity: 0.55 });
-    for (let i=0; i<8; i++){
-      const tg = new THREE.CylinderGeometry(0.01, 0.007, 0.5 + Math.random()*0.25, 8, 1);
-      const t = new THREE.Mesh(tg, tentMat);
-      const a = (i/8) * Math.PI*2;
-      t.position.set(Math.cos(a)*0.11, -0.32, Math.sin(a)*0.11);
-      t.rotation.z = (Math.random()-0.5)*0.35;
-      t.rotation.x = (Math.random()-0.5)*0.35;
-      jelly.add(t);
-    }
-    tank.add(jelly);
-
-    // UI
-    const clockEl = document.getElementById('clock');
-    const btnToggle = document.getElementById('btnToggle');
-    const btnQuality = document.getElementById('btnQuality');
-
-    let paused = false;
-    let highQuality = true;
-
-    btnToggle.addEventListener('click', () => {
-      paused = !paused;
-      btnToggle.textContent = paused ? 'Resume' : 'Pause';
-    });
-
-    btnQuality.addEventListener('click', () => {
-      highQuality = !highQuality;
-      btnQuality.textContent = highQuality ? 'Quality: High' : 'Quality: Low';
-      // Low: drop DPR + disable AA-ish look by reducing pixel ratio
-      renderer.setPixelRatio(highQuality ? Math.min(window.devicePixelRatio, 2) : 1);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    function updateClock(){
+    function updateClock() {
       const d = new Date();
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      const ss = String(d.getSeconds()).padStart(2,'0');
-      clockEl.textContent = `${hh}:${mm}:${ss}`;
+      clockEl.textContent = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     }
-    setInterval(updateClock, 250);
-    updateClock();
+    setInterval(updateClock, 250); updateClock();
 
-    // Animation
-    const t0 = performance.now();
-    function tick(){
+    function onPointer(e) {
+      const x = (e.clientX / window.innerWidth - .5) * 2;
+      const y = (e.clientY / window.innerHeight - .5) * 2;
+      setInput(x, y, e.pointerType === 'mouse' ? 'mouse' : 'touch');
+      if (!state.motionEnabled) setStatus('タッチ/マウス連動中。センサーは motion on を押してHTTPSのページで試してね。');
+    }
+    let dragging = false;
+    renderer.domElement.addEventListener('pointerdown', (e) => { dragging = true; renderer.domElement.setPointerCapture?.(e.pointerId); onPointer(e); }, { passive: true });
+    renderer.domElement.addEventListener('pointermove', (e) => { if (dragging || e.pointerType === 'mouse') onPointer(e); }, { passive: true });
+    renderer.domElement.addEventListener('pointerup', () => { dragging = false; }, { passive: true });
+    renderer.domElement.addEventListener('pointercancel', () => { dragging = false; }, { passive: true });
+
+    function onOrientation(ev) {
+      const gamma = Number(ev.gamma);
+      const beta = Number(ev.beta);
+      if (!Number.isFinite(gamma) || !Number.isFinite(beta)) return;
+      state.sensorSeen = true;
+      if (state.baseGamma === null || state.baseBeta === null) {
+        state.baseGamma = gamma;
+        state.baseBeta = beta;
+      }
+      const angle = screen.orientation?.angle || window.orientation || 0;
+      let dx = (gamma - state.baseGamma) / 18;
+      let dy = (beta - state.baseBeta) / 20;
+      if (Math.abs(angle) === 90) {
+        const oldDx = dx;
+        dx = dy * (angle > 0 ? 1 : -1);
+        dy = oldDx * (angle > 0 ? -1 : 1);
+      }
+      setInput(dx, dy, 'sensor');
+      setStatus(`sensor active  γ:${gamma.toFixed(1)} β:${beta.toFixed(1)} / calibrateで基準リセット`);
+    }
+
+    function onDeviceMotion(ev) {
+      if (state.sensorSeen) return;
+      const g = ev.accelerationIncludingGravity;
+      if (!g || !Number.isFinite(g.x) || !Number.isFinite(g.y)) return;
+      state.sensorSeen = true;
+      setInput(g.x / 6, -g.y / 8, 'motion-fallback');
+      setStatus('devicemotion fallback active。傾けるとゆるく動くにゃ。');
+    }
+
+    async function enableMotion() {
+      state.motionEnabled = true;
+      state.sensorSeen = false;
+      resetCalibration();
+
+      if (!window.isSecureContext) {
+        setStatus('今はHTTPSではないので端末センサーが使えない可能性が高いにゃ。GitHub Pages / kurageworks.com のHTTPSで開いてね。');
+        return;
+      }
+      if (typeof DeviceOrientationEvent === 'undefined') {
+        setStatus('このブラウザではDeviceOrientationEventが見つからないみたい。タッチ/マウスでは動くよ。');
+        return;
+      }
+      try {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const res = await DeviceOrientationEvent.requestPermission();
+          if (res !== 'granted') { setStatus('モーション許可が出なかったみたい。ブラウザの権限設定を確認してね。'); return; }
+        }
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+          await DeviceMotionEvent.requestPermission().catch(() => null);
+        }
+        window.addEventListener('deviceorientation', onOrientation, true);
+        window.addEventListener('devicemotion', onDeviceMotion, true);
+        setStatus('センサー待機中。スマホを少し左右・前後に傾けてみて。');
+        setTimeout(() => {
+          if (!state.sensorSeen) setStatus('センサーイベントがまだ来てないにゃ。Edge/Chromeのサイト設定で「モーションセンサー」がOFFだと止まることがあるよ。');
+        }, 1600);
+      } catch (err) {
+        setStatus('センサー開始でエラー。タッチ/マウス操作では動くよ。');
+      }
+    }
+
+    motionBtn.addEventListener('click', enableMotion);
+    calibrateBtn.addEventListener('click', resetCalibration);
+
+    if (!window.isSecureContext) {
+      setStatus('ローカルHTMLや content:// ではセンサーが止まることがあるにゃ。HTTPSで開くと motion on が本命。');
+    }
+
+    const start = performance.now();
+    function tick() {
       requestAnimationFrame(tick);
-      if (paused) return;
+      const t = (performance.now() - start) * .001;
 
-      const t = (performance.now() - t0) * 0.001;
+      if (performance.now() - state.lastInput > 3500 && state.source !== 'sensor') {
+        state.tx = Math.sin(t * .55) * .18;
+        state.ty = Math.cos(t * .47) * .12;
+        meterEl.style.setProperty('--meter-x', `${142 + state.tx * 142}%`);
+      }
+
+      state.sx += (state.tx - state.sx) * .075;
+      state.sy += (state.ty - state.sy) * .075;
+
+      const yaw = state.sx * .48;
+      const pitch = state.sy * .30;
+      const radius = window.innerWidth < 520 ? 5.7 : 6.25;
+      camera.position.set(Math.sin(yaw) * radius, .92 - pitch * 2.1, Math.cos(yaw) * radius);
+      camera.lookAt(lookAt.x + state.sx * .22, lookAt.y + state.sy * .18, lookAt.z);
 
       bgMat.uniforms.uTime.value = t;
-      causticMat.uniforms.uTime.value = t;
-      surfaceMat.uniforms.uTime.value = t;
-
-      // gentle "live cam" sway (scene-level so OrbitControls stays stable)
-      tank.rotation.y = Math.sin(t * 0.18) * 0.02;
-      tank.rotation.x = Math.sin(t * 0.15) * 0.01;
-
-      // dust drift
-      const p = dustGeo.attributes.position;
-      for (let i=0; i<dustCount; i++){
-        const y = p.getY(i) + dustVel[i] * 0.006;
-        p.setY(i, y > tankH/2 ? -tankH/2 : y);
+      world.rotation.y = Math.sin(t * .16) * .018;
+      world.rotation.x = Math.sin(t * .13) * .008;
+      resident.position.y = Math.sin(t * 1.25) * .035;
+      if (resident.userData?.halo) resident.userData.halo.rotation.z = t * .24;
+      for (let i=0;i<cards.length;i++) {
+        cards[i].position.y += Math.sin(t * .85 + i) * .00075;
+        cards[i].rotation.z += Math.sin(t * .65 + i) * .00025;
       }
-      p.needsUpdate = true;
 
-      // bubbles rise + wobble
-      const bp = bubbleGeo.attributes.position;
-      for (let i=0; i<bubbleCount; i++){
-        let x = bp.getX(i);
-        let y = bp.getY(i);
-        let z = bp.getZ(i);
-        y += bubbleSpeed[i] * 0.012;
-        x += Math.sin(t*0.9 + bubbleSeed[i]) * 0.0018;
-        z += Math.cos(t*0.85 + bubbleSeed[i]) * 0.0018;
-        if (y > tankH/2 - 0.25) respawnBubble(i, -tankH/2);
-        else {
-          bp.setXYZ(i, x, y, z);
-        }
+      const pos = bubbleGeo.attributes.position;
+      for (let i=0;i<bubbleCount;i++) {
+        let y = pos.getY(i) + bubbleSpeed[i] * .012;
+        let x = pos.getX(i) + Math.sin(t + i) * .0015;
+        if (y > 2.45) y = -1.55;
+        pos.setXYZ(i, x, y, pos.getZ(i));
       }
-      bp.needsUpdate = true;
+      pos.needsUpdate = true;
 
-      // jellyfish idle
-      jelly.position.y = 1.45 + Math.sin(t*0.8) * 0.07;
-      jelly.rotation.y = Math.sin(t*0.35) * 0.25;
-
-      controls.update();
       renderer.render(scene, camera);
     }
     tick();
 
-    // Resize
-    function onResize(){
-      camera.aspect = window.inner
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
